@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slot Machine Game</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1b1b1b;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .start-screen, .slot-machine {
+            display: none;
+            text-align: center;
+            background-color: #222;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
+        }
+
+        .start-screen.active, .slot-machine.active {
+            display: block;
+        }
+
+        .start-screen h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .start-screen button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .start-screen button:hover {
+            background-color: #218838;
+        }
+
+        .reels {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .reel {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+            background-color: #fff;
+            color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 18px;
+            color: gold;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        h2 {
+            margin-top: 10px;
+        }
+
+        .game-info {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translate(-50%, 0);
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
+            text-align: left;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 게임 시작 화면 -->
+    <div class="start-screen active">
+        <h1>굳이 강원랜드로 가지마세요! 집에서 즐겨요 슬롯게임!</h1>
+        <button id="startButton">게임 시작</button>
+        <button id="infoButton">게임 설명</button>
+    </div>
+
+    <!-- 게임 설명 창 -->
+    <div class="game-info" id="gameInfo">
+        <span class="close-btn" id="closeInfo">X</span>
+        <h2>게임 설명</h2>
+        <p>1. 게임시작 버튼을 누르면 게임이 시작 됩니다.<br>
+        2. 총 10번의 기회가 주어지며, 잭팟을 터트리면 점수를 얻습니다.<br>
+        3. 각 잭팟마다 다른 점수가 부여 되는데 체리 잭팟 = 100점, 레몬 = 200점, 오렌지 = 300점, 별 = 400점, 포도 = 500점, 종 = 600점, 다이아몬드 = 700점입니다.<br>
+        4. 얻을 수 있는 최대 점수는 7000점 입니다.<br>
+        5. 여러분의 운을 시험해 보세요!!</p>
+    </div>
+
+    <!-- 슬롯 머신 화면 -->
+    <div class="slot-machine">
+        <div class="reels">
+            <div class="reel" id="reel1">?</div>
+            <div class="reel" id="reel2">?</div>
+            <div class="reel" id="reel3">?</div>
+        </div>
+        <button id="spinButton">Spin</button>
+        <div class="message" id="message"></div>
+        <div class="score">현재 점수: <span id="currentScore">0</span></div>
+        <div class="best-score">최고 점수: <span id="bestScore">0</span></div>
+        <div class="turns-left">남은 횟수: <span id="turnsLeft">10</span></div>
+    </div>
+
+    <script>
+        const symbols = ['🍒', '🍋', '🍊', '⭐', '🍇', '🔔', '💎'];
+        const points = [100, 200, 300, 400, 500, 600, 700];  // 각 심볼의 점수
+        const reel1 = document.getElementById('reel1');
+        const reel2 = document.getElementById('reel2');
+        const reel3 = document.getElementById('reel3');
+        const message = document.getElementById('message');
+        const currentScoreDisplay = document.getElementById('currentScore');
+        const bestScoreDisplay = document.getElementById('bestScore');
+        const turnsLeftDisplay = document.getElementById('turnsLeft');
+        const spinButton = document.getElementById('spinButton');
+        const startScreen = document.querySelector('.start-screen');
+        const slotMachine = document.querySelector('.slot-machine');
+        const startButton = document.getElementById('startButton');
+        const infoButton = document.getElementById('infoButton');
+        const gameInfo = document.getElementById('gameInfo');
+        const closeInfo = document.getElementById('closeInfo');
+
+        let currentScore = 0;
+        let bestScore = 0;
+        let turnsLeft = 10;
+
+        // 기본 랜덤 심볼 함수
+        function getRandomSymbol() {
+            const symbol1 = symbols[Math.floor(Math.random() * symbols.length)];
+            const symbol2 = symbols[Math.floor(Math.random() * symbols.length)];
+            const symbol3 = symbols[Math.floor(Math.random() * symbols.length)];
+
+            return [symbol1, symbol2, symbol3];
+        }
+
+        // 잭팟 확률을 30%로 높이기 위한 함수
+        function getHighJackpotSymbol() {
+            const symbol1 = symbols[Math.floor(Math.random() * symbols.length)];
+            const symbol2 = symbols[Math.floor(Math.random() * symbols.length)];
+            
+            // 30% 확률로 세 개의 심볼이 일치하도록 설정
+            const isJackpot = Math.random() < 0.3;
+            const symbol3 = isJackpot ? symbol1 : symbols[Math.floor(Math.random() * symbols.length)];
+
+            return [symbol1, symbol2, symbol3];
+        }
+
+        function spinReels() {
+            if (turnsLeft > 0) {
+                // 30% 확률로 잭팟 발생하는 심볼 또는 일반 심볼을 결정
+                const [symbol1, symbol2, symbol3] = getHighJackpotSymbol();
+                reel1.textContent = symbol1;
+                reel2.textContent = symbol2;
+                reel3.textContent = symbol3;
+                checkResult(symbol1, symbol2, symbol3);
+                turnsLeft--;
+                turnsLeftDisplay.textContent = turnsLeft;
+            } else {
+                message.textContent = '남은 횟수가 없습니다. 게임을 다시 시작하려면 스페이스바를 누르세요.';
+                spinButton.disabled = true;
+            }
+        }
+
+        function checkResult(symbol1, symbol2, symbol3) {
+            if (symbol1 === symbol2 && symbol2 === symbol3) {
+                const symbolIndex = symbols.indexOf(symbol1);
+                const score = points[symbolIndex];
+                currentScore += score;
+                currentScoreDisplay.textContent = currentScore;
+                message.textContent = `🎉 Jackpot! ${symbol1.repeat(3)} You win ${score} points! 🎉`;
+            } else {
+                message.textContent = 'Try again!';
+            }
+            updateBestScore();
+        }
+
+        function updateBestScore() {
+            if (currentScore > bestScore) {
+                bestScore = currentScore;
+                bestScoreDisplay.textContent = bestScore;
+            }
+        }
+
+        function resetGame() {
+            currentScore = 0;
+            turnsLeft = 10;
+            currentScoreDisplay.textContent = currentScore;
+            turnsLeftDisplay.textContent = turnsLeft;
+            message.textContent = '';
+            spinButton.disabled = false;
+        }
+
+        // 게임 시작 버튼 클릭 시 슬롯 머신 화면 표시
+        startButton.addEventListener('click', function() {
+            startScreen.classList.remove('active');
+            slotMachine.classList.add('active');
+        });
+
+        // 게임 설명 버튼 클릭 시 설명 창 표시
+        infoButton.addEventListener('click', function() {
+            gameInfo.style.display = 'block';
+        });
+
+        // 설명 창 닫기 버튼 클릭 시 설명 창 닫기
+        closeInfo.addEventListener('click', function() {
+            gameInfo.style.display = 'none';
+        });
+
+        // Spin 버튼 클릭 이벤트
+        spinButton.addEventListener('click', spinReels);
+
+        // 스페이스바를 눌러 게임 재시작
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space' && turnsLeft === 0) {
+                resetGame();
+            }
+        });
+    </script>
+</body>
+</html>
